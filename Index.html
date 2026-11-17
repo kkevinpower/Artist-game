@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ARTIST — Music Career Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #070709;
+      color: #ffffff;
+      overflow-x: hidden;
+      user-select: none;
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272730;
+      border-radius: 9999px;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.7; transform: scale(0.98); }
+      50% { opacity: 1; transform: scale(1.02); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+    .animate-slide-up {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+    .glass-card {
+      background: rgba(20, 20, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .spotify-green { color: #1DB954; }
+    .bg-spotify-green { background-color: #1DB954; }
+    .youtube-red { color: #FF0033; }
+    .bg-youtube-red { background-color: #FF0033; }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center bg-[#050507]">
+
+  <!-- Main Mobile App Container -->
+  <div id="app" class="w-full max-w-md min-h-screen bg-[#0b0b0f] relative flex flex-col shadow-2xl border-x border-white/5 overflow-hidden">
+
+    <!-- ==================== 1. SPLASH SCREEN ==================== -->
+    <div id="screen-splash" class="fixed inset-0 z-50 max-w-md mx-auto bg-[#07070a] flex flex-col items-center justify-center p-6 transition-opacity duration-500">
+      <div class="relative mb-6 animate-pulse-glow">
+        <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 p-[2px] shadow-[0_0_50px_rgba(168,85,247,0.45)]">
+          <div class="w-full h-full bg-[#0b0b0f] rounded-3xl flex items-center justify-center">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <h1 class="text-4xl font-black tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-purple-400 mb-2">
+        ARTIST
+      </h1>
+      <p class="text-xs uppercase tracking-[0.25em] text-zinc-500 mb-10">Music Career Simulator</p>
+      <div class="w-56 h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+        <div id="splash-bar" class="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 w-full transition-all duration-300 rounded-full"></div>
+      </div>
+      <p class="text-[11px] text-zinc-500 mt-3 font-medium">Loading record labels & charts...</p>
+    </div>
+
+    <!-- ==================== 2. SAVE SLOTS SCREEN ==================== -->
+    <div id="screen-saves" class="hidden flex-1 flex flex-col p-6 overflow-y-auto animate-fade-in">
+      <div class="pt-4 pb-6 text-center shrink-0">
+        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-2">Career Profiles</span>
+        <h2 class="text-2xl font-extrabold tracking-tight text-white">Select Save Slot</h2>
+        <p class="text-xs text-zinc-400 mt-1">Choose an existing artist or start a new legacy</p>
+      </div>
+      <div id="save-slots-container" class="grid grid-cols-1 gap-4 flex-1 content-start pb-6"></div>
+      <div class="pt-2 pb-4 text-center shrink-0">
+        <p class="text-[11px] text-zinc-600">Progress is automatically saved to your device</p>
+      </div>
+    </div>
+
+    <!-- ==================== 3. CHARACTER CREATION SCREEN ==================== -->
+    <div id="screen-create" class="hidden flex-1 flex flex-col p-5 overflow-y-auto animate-slide-up">
+      <div class="flex items-center justify-between pt-2 pb-5">
+        <button onclick="showSavesScreen()" class="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/5 text-zinc-300 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="text-center">
+          <h2 class="text-lg font-extrabold">Create Your Artist</h2>
+          <p class="text-[11px] text-zinc-400">Slot #<span id="create-slot-num">1</span></p>
+        </div>
+        <div class="w-10"></div>
+      </div>
+      <div class="space-y-5 flex-1">
+        <div class="glass-card p-4 rounded-2xl">
+          <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Stage Name</label>
+          <input id="create-name" type="text" maxlength="24" placeholder="e.g. Lil Nova, Velvet, K-Zero..."
+            class="w-full bg-[#0b0b0f] border border-white/10 rounded-xl px-4 py-3.5 text-sm font-semibold text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500 transition" />
+        </div>
+        <div class="glass-card p-4 rounded-2xl">
+          <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2.5">Primary Genre</label>
+          <div id="genre-selector" class="grid grid-cols-2 gap-2.5"></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl">
+          <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2.5">Home Region</label>
+          <div id="region-selector" class="grid grid-cols-2 gap-2.5"></div>
+        </div>
+      </div>
+      <div class="pt-5 pb-3">
+        <button onclick="finalizeCreateArtist()"
+          class="w-full py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-lg shadow-purple-600/25 active:scale-[0.98] transition">
+          Create Artist & Start Career
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 4. MAIN GAME SHELL ==================== -->
+    <div id="screen-game" class="hidden flex-1 flex flex-col h-screen overflow-hidden">
+      <!-- Persistent Top Status Bar -->
+      <header class="px-4 py-3 bg-[#0e0e14]/95 backdrop-blur-md border-b border-white/5 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <button onclick="saveAndExitToMenu()" title="Save & Switch Artist" class="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/5 text-zinc-400 hover:text-white transition shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          </button>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span id="hud-name" class="text-xs font-extrabold text-white truncate max-w-[110px]">Artist</span>
+              <span id="hud-week" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">W1</span>
+            </div>
+            <span id="hud-genre-region" class="text-[10px] text-zinc-500 block truncate">Pop • America</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-1.5 bg-zinc-900/90 border border-white/5 px-2.5 py-1.5 rounded-xl">
+            <span class="text-amber-400 text-xs">⚡</span>
+            <span id="hud-energy" class="text-xs font-extrabold text-amber-300">100/100</span>
+          </div>
+          <div class="flex items-center gap-1 bg-zinc-900/90 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl">
+            <span class="text-emerald-400 text-xs font-bold">$</span>
+            <span id="hud-money" class="text-xs font-extrabold text-emerald-300">2,500</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Scrollable Main Content Viewport -->
+      <main id="game-viewport" class="flex-1 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
+
+        <!-- ========== TAB 1: HOME (DASHBOARD) ========== -->
+        <div id="tab-home" class="p-4 space-y-4 animate-fade-in">
+
+          <!-- Weekly Performance & Next Week -->
+          <div class="rounded-3xl p-4 bg-gradient-to-br from-[#181822] via-[#13131b] to-[#0e0e14] border border-white/10 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-purple-600/10 blur-2xl pointer-events-none"></div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Weekly Performance</p>
+                <h3 id="home-week-title" class="text-lg font-extrabold text-white">Week 1 Overview</h3>
+              </div>
+              <span id="home-weekly-income" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                +$0 / wk
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-4">
+              <div class="bg-black/40 rounded-2xl p-2.5 border border-white/5">
+                <p class="text-[10px] text-zinc-400">Weekly Streams</p>
+                <p id="home-weekly-streams" class="text-sm font-extrabold text-white mt-0.5">0</p>
+              </div>
+              <div class="bg-black/40 rounded-2xl p-2.5 border border-white/5">
+                <p class="text-[10px] text-zinc-400">Monthly Listeners</p>
+                <p id="home-monthly-listeners" class="text-sm font-extrabold text-[#1DB954] mt-0.5">0</p>
+              </div>
+              <div class="bg-black/40 rounded-2xl p-2.5 border border-white/5">
+                <p class="text-[10px] text-zinc-400">Catalog Size</p>
+                <p id="home-catalog-count" class="text-sm font-extrabold text-purple-300 mt-0.5">0 Songs</p>
+              </div>
+            </div>
+
+            <button onclick="advanceWeek()"
+              class="w-full py-3.5 rounded-2xl font-extrabold text-sm tracking-wide bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/25 flex items-center justify-center gap-2 active:scale-[0.98] transition cursor-pointer">
+              <span>Next Week</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </button>
+          </div>
+
+          <!-- Active Record Label Widget -->
+          <div id="home-label-widget" class="glass-card rounded-3xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 font-black text-sm">
+                🏷️
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Record Label Status</p>
+                <h4 id="home-label-name" class="text-sm font-extrabold text-white">Independent (Indie)</h4>
+                <p id="home-label-terms" class="text-[11px] text-zinc-400">100% royalties • No obligations</p>
+              </div>
+            </div>
+            <button onclick="openLabelModal()" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white border border-white/10 transition cursor-pointer">
+              Offers
+            </button>
+          </div>
+
+          <!-- Music & Media Apps Launcher -->
+          <div>
+            <div class="flex items-center justify-between mb-2.5 px-1">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Music & Media Apps</h4>
+              <span class="text-[10px] text-zinc-500">Tap to open</span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2.5">
+              <button onclick="openSubApp('artisfy')" class="glass-card rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 hover:border-[#1DB954]/50 active:scale-95 transition group">
+                <div class="w-10 h-10 rounded-xl bg-[#1DB954]/15 border border-[#1DB954]/30 flex items-center justify-center text-[#1DB954] font-black">
+                  ▶
+                </div>
+                <span class="text-[11px] font-bold text-white">Artisfy</span>
+              </button>
+              <button onclick="openSubApp('albumview')" class="glass-card rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 hover:border-amber-400/50 active:scale-95 transition group">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-black">
+                  💿
+                </div>
+                <span class="text-[11px] font-bold text-white">Albums</span>
+              </button>
+              <button onclick="openSubApp('arttube')" class="glass-card rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 hover:border-[#FF0033]/50 active:scale-95 transition group">
+                <div class="w-10 h-10 rounded-xl bg-[#FF0033]/15 border border-[#FF0033]/30 flex items-center justify-center text-[#FF0033] font-black">
+                  📺
+                </div>
+                <span class="text-[11px] font-bold text-white">ArtTube</span>
+              </button>
+              <button onclick="openSubApp('charts')" class="glass-card rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 hover:border-purple-400/50 active:scale-95 transition group">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black">
+                  🏆
+                </div>
+                <span class="text-[11px] font-bold text-white">Charts</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Global Continent Popularity Panel -->
+          <div class="glass-card rounded-3xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h4 class="text-sm font-extrabold text-white">Global Popularity</h4>
+                <p class="text-[11px] text-zinc-400">Regional reach driving tour ticket sales</p>
+              </div>
+              <span id="home-avg-popularity" class="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/25">Avg 0.0%</span>
+            </div>
+            <div id="continent-popularity-list" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Skill Training Section -->
+          <div class="glass-card rounded-3xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h4 class="text-sm font-extrabold text-white">Artist Training</h4>
+                <p class="text-[11px] text-zinc-400">Improve skills to boost hit quality & sales</p>
+              </div>
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">⚡ 25 Energy</span>
+            </div>
+            <div id="skills-container" class="space-y-3"></div>
+          </div>
+
+        </div>
+
+        <!-- ========== TAB 2: STUDIO (CREATE & RELEASE) ========== -->
+        <div id="tab-studio" class="hidden p-4 space-y-4 animate-fade-in">
+          <div class="grid grid-cols-3 gap-1.5 p-1 bg-zinc-900/90 rounded-2xl border border-white/5">
+            <button onclick="switchStudioMode('record')" id="studio-btn-record" class="py-2.5 rounded-xl text-xs font-extrabold bg-purple-600 text-white transition cursor-pointer">
+              1. Record Track
+            </button>
+            <button onclick="switchStudioMode('single')" id="studio-btn-single" class="py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition cursor-pointer">
+              2. Drop Single
+            </button>
+            <button onclick="switchStudioMode('project')" id="studio-btn-project" class="py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition cursor-pointer">
+              3. EP / Album
+            </button>
+          </div>
+
+          <!-- Mode 1: Record Individual Track with Collab Feat -->
+          <div id="studio-view-record" class="space-y-4">
+            <div class="glass-card rounded-3xl p-4 space-y-4">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-purple-400">Studio Session</span>
+                <h3 class="text-lg font-extrabold text-white">Record Track with Features</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Team up with real world-class artists to massively boost track virality and quality.</p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5">Track Title</label>
+                <input id="track-title-input" type="text" maxlength="32" placeholder="Enter song title..."
+                  class="w-full bg-[#0a0a0e] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500" />
+              </div>
+
+              <!-- Feat Selector -->
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5">Feature Artist (Collab)</label>
+                <select id="track-feat-select" class="w-full bg-[#0a0a0e] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+                  <option value="">-- Solo Track (No Feature) --</option>
+                </select>
+                <p id="feat-cost-notice" class="text-[10px] text-zinc-400 mt-1">Collabs cost an extra $150 featured artist fee.</p>
+              </div>
+
+              <div class="bg-black/40 rounded-2xl p-3 border border-white/5 flex items-center justify-between text-xs">
+                <span class="text-zinc-400">Session Cost:</span>
+                <span id="session-cost-label" class="font-bold text-amber-300">⚡ 20 Energy & $100</span>
+              </div>
+
+              <button onclick="recordNewTrack()"
+                class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/20 active:scale-[0.98] transition cursor-pointer">
+                Record Track in Studio
+              </button>
+            </div>
+
+            <!-- Unreleased Vault -->
+            <div class="glass-card rounded-3xl p-4">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-extrabold text-white">Unreleased Vault</h4>
+                <span id="unreleased-count-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300">0 Tracks</span>
+              </div>
+              <div id="unreleased-tracks-list" class="space-y-2"></div>
+            </div>
+          </div>
+
+          <!-- Mode 2: Release Single -->
+          <div id="studio-view-single" class="hidden space-y-4">
+            <div class="glass-card rounded-3xl p-4 space-y-4">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-[#1DB954]">Single Release</span>
+                <h3 class="text-lg font-extrabold text-white">Release a Single</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Pick an unreleased track, set cover art, and distribute worldwide.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5">Select Recorded Track</label>
+                <select id="single-track-select" class="w-full bg-[#0a0a0e] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-[#1DB954]"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-2">Single Cover Art</label>
+                <div class="flex items-center gap-3">
+                  <div id="single-cover-preview" class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 shrink-0 overflow-hidden border border-white/15 flex items-center justify-center shadow-lg">
+                    <span class="text-xs font-bold text-white/70">COVER</span>
+                  </div>
+                  <div class="flex-1 space-y-2">
+                    <label class="block w-full py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-center cursor-pointer border border-white/10 transition">
+                      Upload Custom Image
+                      <input type="file" accept="image/*" class="hidden" onchange="handleCoverUpload(event, 'single')" />
+                    </label>
+                    <button type="button" onclick="cyclePresetCover('single')" class="w-full py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 border border-white/5 transition cursor-pointer">
+                      Randomize Preset Art
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button onclick="releaseSingle()"
+                class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-[#1DB954] hover:bg-[#1ed760] text-black shadow-lg shadow-[#1DB954]/20 active:scale-[0.98] transition cursor-pointer">
+                Release Single ($150 Distribution)
+              </button>
+            </div>
+          </div>
+
+          <!-- Mode 3: Release EP / Album -->
+          <div id="studio-view-project" class="hidden space-y-4">
+            <div class="glass-card rounded-3xl p-4 space-y-4">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-amber-400">Multi-Track Project</span>
+                <h3 class="text-lg font-extrabold text-white">Assemble EP or Album</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">EP requires 3–5 tracks. Full Album requires 6–12 tracks.</p>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="proj-type-ep" onclick="setProjectType('EP')" class="py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 text-black transition cursor-pointer">
+                  EP (3–5 Tracks)
+                </button>
+                <button type="button" id="proj-type-album" onclick="setProjectType('Album')" class="py-2.5 rounded-xl text-xs font-bold bg-zinc-900 text-zinc-400 border border-white/5 transition cursor-pointer">
+                  Album (6–12 Tracks)
+                </button>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5">Project Title</label>
+                <input id="project-title-input" type="text" maxlength="32" placeholder="Enter EP or Album title..."
+                  class="w-full bg-[#0a0a0e] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-zinc-300 mb-2">Cover Artwork</label>
+                <div class="flex items-center gap-3">
+                  <div id="project-cover-preview" class="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-600 shrink-0 overflow-hidden border border-white/15 flex items-center justify-center shadow-lg">
+                    <span class="text-xs font-bold text-white/70">COVER</span>
+                  </div>
+                  <div class="flex-1 space-y-2">
+                    <label class="block w-full py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-center cursor-pointer border border-white/10 transition">
+                      Upload Custom Image
+                      <input type="file" accept="image/*" class="hidden" onchange="handleCoverUpload(event, 'project')" />
+                    </label>
+                    <button type="button" onclick="cyclePresetCover('project')" class="w-full py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 border border-white/5 transition cursor-pointer">
+                      Randomize Preset Art
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-xs font-bold text-zinc-300">Select Tracks from Vault</label>
+                  <span id="project-selected-count" class="text-xs font-extrabold text-amber-400">0 selected</span>
+                </div>
+                <div id="project-tracks-checklist" class="max-h-48 overflow-y-auto space-y-1.5 pr-1"></div>
+              </div>
+              <button onclick="releaseProject()"
+                class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20 active:scale-[0.98] transition cursor-pointer">
+                Release Project ($400 Distribution)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== TAB 3: TOURS & CONCERTS ========== -->
+        <div id="tab-tours" class="hidden p-4 space-y-4 animate-fade-in">
+          <div class="glass-card rounded-3xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-pink-400">World Booking</span>
+                <h3 class="text-lg font-extrabold text-white">Concerts & Tours</h3>
+              </div>
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">⚡ 15 Energy / Show</span>
+            </div>
+            <p class="text-xs text-zinc-400">
+              Select a continent, choose your venue tier, and pick a major city. Ticket sales depend on your <strong class="text-white">Continent Popularity %</strong>!
+            </p>
+            <div>
+              <label class="block text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 mb-2">1. Select Continent</label>
+              <div id="tour-continent-selector" class="grid grid-cols-3 gap-2"></div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 mb-2">2. Select Venue Category</label>
+              <div class="grid grid-cols-3 gap-1.5 p-1 bg-zinc-900/95 rounded-2xl border border-white/5">
+                <button type="button" onclick="selectTourTier('clubs')" id="tour-tier-btn-clubs"
+                  class="py-2.5 px-1.5 rounded-xl text-[11px] font-extrabold bg-pink-600 text-white transition cursor-pointer">
+                  Clubs & Bars
+                </button>
+                <button type="button" onclick="selectTourTier('arenas')" id="tour-tier-btn-arenas"
+                  class="py-2.5 px-1.5 rounded-xl text-[11px] font-bold text-zinc-400 hover:text-white transition cursor-pointer">
+                  Arenas
+                </button>
+                <button type="button" onclick="selectTourTier('festivals')" id="tour-tier-btn-festivals"
+                  class="py-2.5 px-1.5 rounded-xl text-[11px] font-bold text-zinc-400 hover:text-white transition cursor-pointer">
+                  Festivals
+                </button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2.5 px-1">
+              <h4 id="tour-venues-header" class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">3. Select City & Venue</h4>
+              <span id="tour-selected-pop-badge" class="text-[11px] font-extrabold text-pink-400">Popularity: 0.0%</span>
+            </div>
+            <div id="tours-list-container" class="space-y-3"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Bottom Navigation Bar (3 Main Tabs + Charts shortcut) -->
+      <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0d0d12]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 grid grid-cols-3 gap-2.5 z-30">
+        <button onclick="switchMainTab('home')" id="nav-btn-home"
+          class="flex flex-col items-center justify-center py-2 rounded-2xl bg-purple-600/20 border border-purple-500/40 text-purple-300 transition cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+            <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+          </svg>
+          <span class="text-[11px] font-extrabold">Home</span>
+        </button>
+        <button onclick="switchMainTab('studio')" id="nav-btn-studio"
+          class="flex flex-col items-center justify-center py-2 rounded-2xl bg-zinc-900/70 border border-white/5 text-zinc-400 hover:text-white transition cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          <span class="text-[11px] font-bold">Studio</span>
+        </button>
+        <button onclick="switchMainTab('tours')" id="nav-btn-tours"
+          class="flex flex-col items-center justify-center py-2 rounded-2xl bg-zinc-900/70 border border-white/5 text-zinc-400 hover:text-white transition cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-[11px] font-bold">Tours</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ==================== 5. INTERACTIVE SUB-APPS OVERLAYS ==================== -->
+
+    <!-- A. ARTISFY APP -->
+    <div id="subapp-artisfy" class="hidden fixed inset-0 z-40 max-w-md mx-auto bg-[#121212] flex flex-col animate-slide-up">
+      <div class="px-4 py-3 bg-[#121212]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0">
+        <button onclick="closeSubApp('artisfy')" class="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-white/5 px-3 py-1.5 rounded-full cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#1DB954]"></span>
+          <span class="text-sm font-black tracking-tight text-white">Artisfy</span>
+        </div>
+        <div class="w-10"></div>
+      </div>
+      <div class="flex-1 overflow-y-auto pb-10">
+        <div class="relative h-44 bg-gradient-to-b from-emerald-900 to-[#121212]">
+          <img id="artisfy-banner-img" src="" alt="" class="hidden w-full h-full object-cover" />
+          <label class="absolute top-3 right-3 px-2.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-[10px] font-bold text-white border border-white/15 cursor-pointer flex items-center gap-1 transition">
+            Edit Banner
+            <input type="file" accept="image/*" class="hidden" onchange="updateProfileMedia(event, 'artisfyBanner')" />
+          </label>
+          <div class="absolute bottom-3 left-4 right-4 flex items-end gap-3.5">
+            <label class="relative w-20 h-20 rounded-full bg-zinc-800 border-2 border-[#1DB954] overflow-hidden shrink-0 cursor-pointer group shadow-xl">
+              <img id="artisfy-avatar-img" src="" alt="" class="hidden w-full h-full object-cover" />
+              <div id="artisfy-avatar-placeholder" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-600 to-zinc-900 text-xl font-black text-white">A</div>
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] font-bold text-white transition">Change</div>
+              <input type="file" accept="image/*" class="hidden" onchange="updateProfileMedia(event, 'artisfyAvatar')" />
+            </label>
+            <div class="pb-1">
+              <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[#3D91F4]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z"/></svg>
+                <span class="text-[10px] font-semibold text-zinc-300">Verified Artist</span>
+              </div>
+              <h2 id="artisfy-artist-name" class="text-2xl font-black text-white leading-tight">Artist Name</h2>
+              <p id="artisfy-monthly-listeners" class="text-xs font-medium text-zinc-400 mt-0.5">0 monthly listeners</p>
+            </div>
+          </div>
+        </div>
+        <div class="px-4 pt-4">
+          <h3 class="text-base font-extrabold text-white mb-3">Popular</h3>
+          <div id="artisfy-popular-list" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B. ALBUMVIEW APP -->
+    <div id="subapp-albumview" class="hidden fixed inset-0 z-40 max-w-md mx-auto bg-[#0c0c10] flex flex-col animate-slide-up">
+      <div class="px-4 py-3 bg-[#111116] border-b border-white/5 flex items-center justify-between shrink-0">
+        <button onclick="closeSubApp('albumview')" class="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-white/5 px-3 py-1.5 rounded-full cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          <span class="text-sm font-black tracking-tight text-white">AlbumView</span>
+        </div>
+        <div class="w-14"></div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] uppercase tracking-wider text-zinc-400 font-bold">Total Units Sold</p>
+            <h3 id="albumview-total-sales" class="text-2xl font-black text-amber-400 mt-0.5">0 Copies</h3>
+          </div>
+          <div class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-black text-xs">
+            RIAA
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400 mb-3">Discography & Sales</h4>
+          <div id="albumview-grid" class="grid grid-cols-2 gap-3.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C. ARTTUBE APP -->
+    <div id="subapp-arttube" class="hidden fixed inset-0 z-40 max-w-md mx-auto bg-[#0f0f0f] flex flex-col animate-slide-up">
+      <div class="px-4 py-3 bg-[#0f0f0f]/95 border-b border-white/10 flex items-center justify-between shrink-0">
+        <button onclick="closeSubApp('arttube')" class="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-white/5 px-3 py-1.5 rounded-full cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span class="px-1.5 py-0.5 rounded bg-[#FF0033] text-white text-[10px] font-black">▶</span>
+          <span class="text-sm font-black tracking-tight text-white">ArtTube</span>
+        </div>
+        <button onclick="openArtTubeUploadModal()" class="w-8 h-8 rounded-full bg-[#FF0033] hover:bg-red-600 text-white font-black text-lg flex items-center justify-center shadow-lg shadow-[#FF0033]/30 active:scale-90 transition cursor-pointer" title="Upload Music Video">
+          +
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto pb-10">
+        <div class="relative h-32 bg-gradient-to-r from-zinc-900 via-red-950 to-zinc-900">
+          <img id="arttube-banner-img" src="" alt="" class="hidden w-full h-full object-cover" />
+          <label class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/65 hover:bg-black/85 text-[10px] font-bold text-white border border-white/15 cursor-pointer transition">
+            Change Banner
+            <input type="file" accept="image/*" class="hidden" onchange="updateProfileMedia(event, 'arttubeBanner')" />
+          </label>
+        </div>
+        <div class="px-4 pt-3 pb-4 border-b border-white/10 flex items-center gap-3.5">
+          <label class="relative w-16 h-16 rounded-full bg-zinc-800 border-2 border-[#FF0033] overflow-hidden shrink-0 cursor-pointer group">
+            <img id="arttube-avatar-img" src="" alt="" class="hidden w-full h-full object-cover" />
+            <div id="arttube-avatar-placeholder" class="w-full h-full flex items-center justify-center bg-zinc-900 text-lg font-black text-white">YT</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] font-bold text-white transition">Edit</div>
+            <input type="file" accept="image/*" class="hidden" onchange="updateProfileMedia(event, 'arttubeAvatar')" />
+          </label>
+          <div class="flex-1 min-w-0">
+            <h2 id="arttube-channel-name" class="text-lg font-black text-white truncate">Artist Official</h2>
+            <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+              <span id="arttube-subs" class="font-bold text-white">0 subscribers</span>
+              <span>•</span>
+              <span id="arttube-total-views">0 views</span>
+            </div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-extrabold text-white">Music Videos</h3>
+            <button onclick="openArtTubeUploadModal()" class="text-xs font-bold text-[#FF0033] hover:underline cursor-pointer">+ Post Video</button>
+          </div>
+          <div id="arttube-videos-list" class="space-y-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D. CHARTS APP (GLOBAL TOP CHARTS BY CONTINENT) -->
+    <div id="subapp-charts" class="hidden fixed inset-0 z-40 max-w-md mx-auto bg-[#0f0f14] flex flex-col animate-slide-up">
+      <div class="px-4 py-3 bg-[#14141b] border-b border-white/5 flex items-center justify-between shrink-0">
+        <button onclick="closeSubApp('charts')" class="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-white/5 px-3 py-1.5 rounded-full cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+          <span class="text-sm font-black tracking-tight text-white">Global Charts</span>
+        </div>
+        <div class="w-14"></div>
+      </div>
+      <div class="p-4 bg-[#14141b]/50 border-b border-white/5 flex gap-2 shrink-0 overflow-x-auto" id="charts-continent-tabs"></div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div class="glass-card rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 id="charts-header-title" class="text-sm font-extrabold text-white">America Top 10 Singles</h3>
+            <span class="text-[10px] text-zinc-400">Updated weekly</span>
+          </div>
+          <div id="continent-singles-chart-list" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 6. MODALS ==================== -->
+    <div id="modal-arttube-upload" class="hidden fixed inset-0 z-50 max-w-md mx-auto bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in">
+      <div class="w-full bg-[#16161c] border border-white/10 rounded-3xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-black text-white">Upload Music Video</h3>
+          <button onclick="closeModal('modal-arttube-upload')" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer">✕</button>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-300 mb-1.5">Select Released Song</label>
+          <select id="arttube-song-select" class="w-full bg-[#0b0b0f] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-[#FF0033]"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-300 mb-1.5">Video Thumbnail</label>
+          <div id="arttube-thumb-preview" class="w-full h-36 rounded-2xl bg-gradient-to-r from-red-600 to-purple-800 overflow-hidden border border-white/15 flex items-center justify-center mb-2">
+            <span class="text-xs font-bold text-white/80">16:9 THUMBNAIL</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-center cursor-pointer border border-white/10">
+              Upload Image
+              <input type="file" accept="image/*" class="hidden" onchange="handleCoverUpload(event, 'arttube')" />
+            </label>
+            <button type="button" onclick="cyclePresetCover('arttube')" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 border border-white/5 cursor-pointer">
+              Preset Thumbnail
+            </button>
+          </div>
+        </div>
+        <button onclick="publishArtTubeVideo()" class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-[#FF0033] hover:bg-red-600 text-white shadow-lg shadow-[#FF0033]/25 transition cursor-pointer">
+          Publish Video to ArtTube
+        </button>
+      </div>
+    </div>
+
+    <!-- RECORD LABEL OFFERS MODAL -->
+    <div id="modal-labels" class="hidden fixed inset-0 z-50 max-w-md mx-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="w-full bg-[#15151c] border border-white/10 rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-amber-400">Industry Partnerships</span>
+            <h3 class="text-lg font-black text-white">Record Label Offers</h3>
+          </div>
+          <button onclick="closeModal('modal-labels')" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer">✕</button>
+        </div>
+        <p class="text-xs text-zinc-400">Sign with a major record label to get cash advances and global distribution boost, in exchange for royalty splits and album delivery deadlines.</p>
+        <div id="labels-offers-container" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- PR & SCANDAL EVENT MODAL -->
+    <div id="modal-event" class="hidden fixed inset-0 z-50 max-w-md mx-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="w-full bg-[#15151c] border border-white/10 rounded-3xl p-5 space-y-4 text-center">
+        <span id="event-badge" class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-400">
+          BREAKING NEWS
+        </span>
+        <div>
+          <h3 id="event-title" class="text-xl font-black text-white">Social Media Drama!</h3>
+          <p id="event-desc" class="text-xs text-zinc-300 mt-2">A rival artist dissed your latest track online, causing massive online debate.</p>
+        </div>
+        <div id="event-buttons" class="space-y-2 pt-2"></div>
+      </div>
+    </div>
+
+    <!-- TOUR RESULT MODAL -->
+    <div id="modal-tour-result" class="hidden fixed inset-0 z-50 max-w-md mx-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div class="w-full bg-[#15151c] border border-white/10 rounded-3xl p-5 space-y-4 text-center">
+        <div id="tour-result-badge" class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400">
+          SOLD OUT!
+        </div>
+        <div>
+          <h3 id="tour-result-title" class="text-xl font-black text-white">New York — Bowery Electric</h3>
+          <p id="tour-result-subtitle" class="text-xs font-bold text-purple-300 mt-0.5">America • Clubs & Bars</p>
+        </div>
+        <p id="tour-result-desc" class="text-xs text-zinc-400">Your fans showed up in huge numbers!</p>
+        <div class="bg-black/40 rounded-2xl p-3.5 border border-white/5 space-y-2 text-xs text-left">
+          <div class="flex justify-between">
+            <span class="text-zinc-400">Tickets Sold:</span>
+            <span id="tour-res-tickets" class="font-extrabold text-white">50 / 50 (100%)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-400">Ticket Price:</span>
+            <span id="tour-res-price" class="font-bold text-zinc-200">$20</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-400">Gross Revenue:</span>
+            <span id="tour-res-gross" class="font-bold text-emerald-400">+$1,000</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-400">Stage & Booking Cost:</span>
+            <span id="tour-res-cost" class="font-bold text-rose-400">-$250</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-400">Popularity Gain:</span>
+            <span id="tour-res-pop-gain" class="font-extrabold text-pink-400">+1.4%</span>
+          </div>
+          <div class="border-t border-white/10 pt-2 flex justify-between text-sm">
+            <span class="font-bold text-zinc-300">Net Profit:</span>
+            <span id="tour-res-net" class="font-black text-emerald-400">+$750</span>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-tour-result')" class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-white text-black hover:bg-zinc-200 transition cursor-pointer">
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[380px] pointer-events-none flex flex-col gap-2"></div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       GAME CONSTANTS & GENERATED ARTISTS (~100 PER CONTINENT)
+       ========================================================================== */
+    const STORAGE_KEY = 'ARTIST_GAME_SAVES_V3';
+    const GENRES = ['Pop', 'Rap', 'Hip-Hop', 'R&B', 'Electronic', 'K-Pop'];
+    const REGIONS = ['America', 'UK', 'Africa', 'Europe', 'Asia'];
+
+    const FIRST_NAMES = ['Aiden', 'Zara', 'Kreo', 'Velvet', 'Nova', 'Dante', 'Kai', 'Lexi', 'Tariq', 'Chloe', 'Zion', 'Maya', 'Jax', 'Sora', 'Nia', 'Kofi', 'Elena', 'Kaito', 'Amara', 'Leo'];
+    const LAST_NAMES = ['Storm', 'Vance', 'Carter', 'Cruz', 'Blade', 'King', 'Starr', 'Chen', 'Okafor', 'Silva', 'Devi', 'Knight', 'Frost', 'Monroe', 'Tanaka', 'Bello', 'Vogel', 'Santos', 'Reyes', 'Alpha'];
+
+    // Generate ~100 realistic artists per continent for Feat & Chart systems
+    const CONTINENT_FEATURE_ARTISTS = {};
+    REGIONS.forEach(reg => {
+      CONTINENT_FEATURE_ARTISTS[reg] = [];
+      for (let i = 1; i <= 20; i++) {
+        const name = `${FIRST_NAMES[(i * 3) % FIRST_NAMES.length]} ${LAST_NAMES[(i * 7) % LAST_NAMES.length]}`;
+        const fame = Math.floor(2000000 + Math.random() * 95000000);
+        CONTINENT_FEATURE_ARTISTS[reg].push({
+          id: `${reg.toLowerCase()}_art_${i}`,
+          name: name,
+          fame: fame,
+          quality: Math.floor(70 + Math.random() * 28),
+          avatarColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4'] [i % 5]
+        });
+      }
+    });
+
+    const RECORD_LABELS = [
+      { id: 'indie', name: 'Independent (Indie)', advance: 0, royaltyShare: 1.0, albumRequirement: 0, desc: '100% royalties, total freedom, no obligations.' },
+      { id: 'def_jam', name: 'Def Jam Urban', advance: 5000, royaltyShare: 0.75, albumRequirement: 1, desc: '$5,000 advance • 75% royalties • Requires 1 Album.' },
+      { id: 'republic', name: 'Republic Records', advance: 15000, royaltyShare: 0.65, albumRequirement: 2, desc: '$15,000 advance • 65% royalties • Requires 2 Albums.' },
+      { id: 'universal', name: 'Universal Music Group', advance: 50000, royaltyShare: 0.55, albumRequirement: 3, desc: '$50,000 advance • 55% royalties • Requires 3 Albums.' }
+    ];
+
+    const COVER_PRESETS = [
+      'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
+      'linear-gradient(135deg, #10b981 0%, #059669 50%, #064e3b 100%)',
+      'linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #991b1b 100%)',
+      'linear-gradient(135deg, #06b6d4 0%, #2563eb 50%, #1e1b4b 100%)',
+      'linear-gradient(135deg, #f43f5e 0%, #881337 60%, #09090b 100%)',
+      'linear-gradient(135deg, #eab308 0%, #84cc16 50%, #14532d 100%)'
+    ];
+
+    const TOUR_VENUES_BY_CONTINENT = {
+      America: {
+        clubs: [
+          { id: 'am_c1', city: 'New York', venue: 'The Bowery Electric', capacity: 50, cost: 220, ticketPrice: 20 },
+          { id: 'am_c2', city: 'Los Angeles', venue: 'The Troubadour', capacity: 60, cost: 260, ticketPrice: 22 },
+          { id: 'am_c3', city: 'Chicago', venue: 'Subterranean', capacity: 72, cost: 310, ticketPrice: 22 },
+          { id: 'am_c4', city: 'Miami', venue: 'The Velvet Lounge', capacity: 85, cost: 360, ticketPrice: 25 }
+        ],
+        arenas: [
+          { id: 'am_a1', city: 'Miami', venue: 'Kaseya Center', capacity: 3500, cost: 15000, ticketPrice: 55 },
+          { id: 'am_a2', city: 'Chicago', venue: 'United Center', capacity: 5200, cost: 23000, ticketPrice: 60 },
+          { id: 'am_a3', city: 'Los Angeles', venue: 'Crypto.com Arena', capacity: 7000, cost: 31500, ticketPrice: 65 },
+          { id: 'am_a4', city: 'New York', venue: 'Madison Square Garden', capacity: 9500, cost: 44000, ticketPrice: 75 }
+        ],
+        festivals: [
+          { id: 'am_f1', city: 'Austin', venue: 'Austin City Limits', capacity: 20000, cost: 92000, ticketPrice: 95 },
+          { id: 'am_f2', city: 'Miami', venue: 'Rolling Loud', capacity: 32000, cost: 155000, ticketPrice: 110 },
+          { id: 'am_f3', city: 'Chicago', venue: 'Lollapalooza', capacity: 48000, cost: 235000, ticketPrice: 120 },
+          { id: 'am_f4', city: 'Indio', venue: 'Coachella', capacity: 65000, cost: 325000, ticketPrice: 135 }
+        ]
+      },
+      UK: {
+        clubs: [
+          { id: 'uk_c1', city: 'London', venue: 'Camden Assembly', capacity: 50, cost: 210, ticketPrice: 20 },
+          { id: 'uk_c2', city: 'Liverpool', venue: 'The Cavern Club', capacity: 60, cost: 250, ticketPrice: 20 },
+          { id: 'uk_c3', city: 'Manchester', venue: 'Night & Day Cafe', capacity: 72, cost: 295, ticketPrice: 22 },
+          { id: 'uk_c4', city: 'Glasgow', venue: "King Tut's", capacity: 85, cost: 350, ticketPrice: 24 }
+        ],
+        arenas: [
+          { id: 'uk_a1', city: 'Birmingham', venue: 'Utilita Arena', capacity: 3400, cost: 14500, ticketPrice: 55 },
+          { id: 'uk_a2', city: 'Glasgow', venue: 'OVO Hydro', capacity: 4800, cost: 21500, ticketPrice: 60 },
+          { id: 'uk_a3', city: 'Manchester', venue: 'AO Arena', capacity: 6600, cost: 29500, ticketPrice: 65 },
+          { id: 'uk_a4', city: 'London', venue: 'The O2 Arena', capacity: 9000, cost: 41500, ticketPrice: 75 }
+        ],
+        festivals: [
+          { id: 'uk_f1', city: 'Glasgow', venue: 'TRNSMT', capacity: 20000, cost: 90000, ticketPrice: 95 },
+          { id: 'uk_f2', city: 'London', venue: 'Wireless Festival', capacity: 32000, cost: 150000, ticketPrice: 105 },
+          { id: 'uk_f3', city: 'Reading', venue: 'Reading & Leeds', capacity: 46000, cost: 220000, ticketPrice: 115 },
+          { id: 'uk_f4', city: 'Somerset', venue: 'Glastonbury', capacity: 65000, cost: 315000, ticketPrice: 130 }
+        ]
+      },
+      Europe: {
+        clubs: [
+          { id: 'eu_c1', city: 'Berlin', venue: 'Watergate', capacity: 50, cost: 210, ticketPrice: 20 },
+          { id: 'eu_c2', city: 'Budapest', venue: 'Akvarium Klub', capacity: 60, cost: 255, ticketPrice: 22 },
+          { id: 'eu_c3', city: 'Amsterdam', venue: 'Paradiso', capacity: 72, cost: 300, ticketPrice: 22 },
+          { id: 'eu_c4', city: 'Paris', venue: 'Le Pop-Up', capacity: 85, cost: 345, ticketPrice: 24 }
+        ],
+        arenas: [
+          { id: 'eu_a1', city: 'Budapest', venue: 'MVM Dome', capacity: 3600, cost: 15500, ticketPrice: 55 },
+          { id: 'eu_a2', city: 'Amsterdam', venue: 'Ziggo Dome', capacity: 5200, cost: 23000, ticketPrice: 60 },
+          { id: 'eu_a3', city: 'Berlin', venue: 'Uber Arena', capacity: 6800, cost: 30500, ticketPrice: 65 },
+          { id: 'eu_a4', city: 'Paris', venue: 'Accor Arena', capacity: 9000, cost: 41500, ticketPrice: 75 }
+        ],
+        festivals: [
+          { id: 'eu_f1', city: 'Barcelona', venue: 'Primavera Sound', capacity: 22000, cost: 98000, ticketPrice: 95 },
+          { id: 'eu_f2', city: 'Nürburg', venue: 'Rock am Ring', capacity: 35000, cost: 165000, ticketPrice: 105 },
+          { id: 'eu_f3', city: 'Budapest', venue: 'Sziget Festival', capacity: 48000, cost: 235000, ticketPrice: 115 },
+          { id: 'eu_f4', city: 'Boom', venue: 'Tomorrowland', capacity: 64000, cost: 315000, ticketPrice: 130 }
+        ]
+      },
+      Asia: {
+        clubs: [
+          { id: 'as_c1', city: 'Seoul', venue: 'Club Octagon', capacity: 50, cost: 220, ticketPrice: 20 },
+          { id: 'as_c2', city: 'Tokyo', venue: 'WOMB', capacity: 60, cost: 260, ticketPrice: 22 },
+          { id: 'as_c3', city: 'Singapore', venue: 'Zouk', capacity: 72, cost: 300, ticketPrice: 22 },
+          { id: 'as_c4', city: 'Taipei', venue: 'Omni', capacity: 85, cost: 355, ticketPrice: 25 }
+        ],
+        arenas: [
+          { id: 'as_a1', city: 'Singapore', venue: 'Singapore Indoor Stadium', capacity: 3500, cost: 15000, ticketPrice: 55 },
+          { id: 'as_a2', city: 'Taipei', venue: 'Taipei Arena', capacity: 5000, cost: 22000, ticketPrice: 60 },
+          { id: 'as_a3', city: 'Seoul', venue: 'KSPO Dome', capacity: 6800, cost: 31000, ticketPrice: 68 },
+          { id: 'as_a4', city: 'Tokyo', venue: 'Tokyo Dome', capacity: 9500, cost: 44500, ticketPrice: 75 }
+        ],
+        festivals: [
+          { id: 'as_f1', city: 'Hong Kong', venue: 'Clockenflap', capacity: 19000, cost: 88000, ticketPrice: 95 },
+          { id: 'as_f2', city: 'Seoul', venue: 'Waterbomb Festival', capacity: 32000, cost: 152000, ticketPrice: 105 },
+          { id: 'as_f3', city: 'Tokyo', venue: 'Ultra Japan', capacity: 46000, cost: 225000, ticketPrice: 120 },
+          { id: 'as_f4', city: 'Tokyo', venue: 'Summer Sonic', capacity: 64000, cost: 315000, ticketPrice: 135 }
+        ]
+      },
+      Africa: {
+        clubs: [
+          { id: 'af_c1', city: 'Johannesburg', venue: 'The Good Luck Bar', capacity: 50, cost: 185, ticketPrice: 16 },
+          { id: 'af_c2', city: 'Lagos', venue: 'Hard Rock Cafe', capacity: 60, cost: 220, ticketPrice: 18 },
+          { id: 'af_c3', city: 'Nairobi', venue: 'Alchemist Bar', capacity: 72, cost: 265, ticketPrice: 20 },
+          { id: 'af_c4', city: 'Cape Town', venue: 'Waiting Room', capacity: 85, cost: 310, ticketPrice: 20 }
+        ],
+        arenas: [
+          { id: 'af_a1', city: 'Nairobi', venue: 'Kasarani Arena', capacity: 3000, cost: 12500, ticketPrice: 45 },
+          { id: 'af_a2', city: 'Cape Town', venue: 'Grand Arena', capacity: 4400, cost: 18500, ticketPrice: 50 },
+          { id: 'af_a3', city: 'Pretoria', venue: 'SunBet Arena', capacity: 6000, cost: 25500, ticketPrice: 55 },
+          { id: 'af_a4', city: 'Lagos', venue: 'Eko Convention Centre', capacity: 8200, cost: 35000, ticketPrice: 65 }
+        ],
+        festivals: [
+          { id: 'af_f1', city: 'Jinja', venue: 'Nyege Nyege', capacity: 16000, cost: 72000, ticketPrice: 80 },
+          { id: 'af_f2', city: 'Cape Town', venue: 'Rocking the Daisies', capacity: 28000, cost: 128000, ticketPrice: 90 },
+          { id: 'af_f3', city: 'Lagos', venue: 'Flytime Fest', capacity: 42000, cost: 195000, ticketPrice: 100 },
+          { id: 'af_f4', city: 'Accra', venue: 'Afro Nation', capacity: 60000, cost: 285000, ticketPrice: 115 }
+        ]
+      }
+    };
+
+    /* ==========================================================================
+       APPLICATION STATE
+       ========================================================================== */
+    let saves = [null, null, null, null];
+    let activeSlotIndex = null;
+    let gameState = null;
+
+    let createSelectedGenre = 'Pop';
+    let createSelectedRegion = 'America';
+
+    let currentStudioMode = 'record';
+    let currentProjectType = 'EP';
+    let selectedTrackIdsForProject = [];
+    let tempCovers = {
+      single: { type: 'preset', value: COVER_PRESETS[0] },
+      project: { type: 'preset', value: COVER_PRESETS[2] },
+      arttube: { type: 'preset', value: COVER_PRESETS[4] }
+    };
+
+    let selectedTourContinent = 'America';
+    let selectedTourTier = 'clubs';
+    let selectedChartsContinent = 'America';
+
+    /* ==========================================================================
+       INITIALIZATION & STORAGE
+       ========================================================================== */
+    function initArtistApp() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length === 4) {
+            saves = parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Storage error:', e);
+      }
+
+      const splash = document.getElementById('screen-splash');
+      setTimeout(() => {
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => {
+            splash.classList.add('hidden');
+            showSavesScreen();
+          }, 300);
+        }
+      }, 700);
+    }
+
+    window.addEventListener('DOMContentLoaded', initArtistApp);
+
+    function persistSavesToStorage() {
+      try {
+        if (activeSlotIndex !== null && gameState) {
+          saves[activeSlotIndex] = gameState;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+      } catch (e) {
+        showToast('Storage limit reached.', 'error');
+      }
+    }
+
+    function hideAllScreens() {
+      ['screen-splash', 'screen-saves', 'screen-create', 'screen-game'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    /* ==========================================================================
+       SAVES & CREATION
+       ========================================================================== */
+    function showSavesScreen() {
+      hideAllScreens();
+      document.getElementById('screen-saves').classList.remove('hidden');
+      renderSaveSlots();
+    }
+
+    function renderSaveSlots() {
+      const container = document.getElementById('save-slots-container');
+      container.innerHTML = '';
+
+      saves.forEach((slot, idx) => {
+        if (!slot) {
+          container.innerHTML += `
+            <button onclick="openCharacterCreation(${idx})"
+              class="w-full h-28 rounded-3xl border-2 border-dashed border-white/15 hover:border-purple-500/60 bg-zinc-900/40 hover:bg-zinc-900/80 flex flex-col items-center justify-center gap-1.5 transition group active:scale-[0.99] cursor-pointer">
+              <div class="w-11 h-11 rounded-2xl bg-purple-600/20 group-hover:bg-purple-600 text-purple-400 group-hover:text-white flex items-center justify-center text-2xl font-black transition">
+                +
+              </div>
+              <span class="text-xs font-bold text-zinc-400 group-hover:text-white">New Artist (Slot ${idx + 1})</span>
+            </button>
+          `;
+        } else {
+          container.innerHTML += `
+            <div class="glass-card rounded-3xl p-4 flex items-center justify-between gap-3 border border-white/10 w-full">
+              <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-xl font-black text-white shrink-0 overflow-hidden shadow-md">
+                  ${slot.artisfyAvatar ? `<img src="${slot.artisfyAvatar}" class="w-full h-full object-cover" />` : slot.name.charAt(0).toUpperCase()}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base font-extrabold text-white truncate">${escapeHtml(slot.name)}</h3>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 shrink-0">W${slot.week}</span>
+                  </div>
+                  <p class="text-xs text-zinc-400 mt-0.5 truncate">${escapeHtml(slot.genre)} • ${escapeHtml(slot.region)}</p>
+                  <p class="text-xs font-bold text-emerald-400 mt-0.5">$${formatNumber(slot.money)}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="loadGameSlot(${idx})"
+                  class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-extrabold transition active:scale-95 cursor-pointer">
+                  Play
+                </button>
+                <button onclick="deleteSaveSlot(${idx})" title="Delete Save"
+                  class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      });
+    }
+
+    function deleteSaveSlot(idx) {
+      saves[idx] = null;
+      persistSavesToStorage();
+      renderSaveSlots();
+      showToast('Save slot deleted.', 'info');
+    }
+
+    function openCharacterCreation(idx) {
+      activeSlotIndex = idx;
+      document.getElementById('create-slot-num').textContent = idx + 1;
+      document.getElementById('create-name').value = '';
+      hideAllScreens();
+      document.getElementById('screen-create').classList.remove('hidden');
+      renderGenreSelector();
+      renderRegionSelector();
+    }
+
+    function renderGenreSelector() {
+      const container = document.getElementById('genre-selector');
+      container.innerHTML = '';
+      GENRES.forEach(g => {
+        const isSel = g === createSelectedGenre;
+        container.innerHTML += `
+          <button type="button" onclick="setCreateGenre('${g}')"
+            class="py-3 px-3 rounded-2xl text-xs font-extrabold border transition ${isSel ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30' : 'bg-zinc-900/60 text-zinc-400 border-white/5 hover:text-white'}">
+            ${g}
+          </button>
+        `;
+      });
+    }
+
+    function setCreateGenre(g) {
+      createSelectedGenre = g;
+      renderGenreSelector();
+    }
+
+    function renderRegionSelector() {
+      const container = document.getElementById('region-selector');
+      container.innerHTML = '';
+      REGIONS.forEach(r => {
+        const isSel = r === createSelectedRegion;
+        container.innerHTML += `
+          <button type="button" onclick="setCreateRegion('${r}')"
+            class="py-3 px-3 rounded-2xl text-xs font-extrabold border transition ${isSel ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30' : 'bg-zinc-900/60 text-zinc-400 border-white/5 hover:text-white'}">
+            ${r}
+          </button>
+        `;
+      });
+    }
+
+    function setCreateRegion(r) {
+      createSelectedRegion = r;
+      renderRegionSelector();
+    }
+
+    function finalizeCreateArtist() {
+      const nameInput = document.getElementById('create-name');
+      const name = nameInput.value.trim() || `Artist ${activeSlotIndex + 1}`;
+
+      gameState = {
+        name: name,
+        genre: createSelectedGenre,
+        region: createSelectedRegion,
+        week: 1,
+        money: 2500,
+        energy: 100,
+        maxEnergy: 100,
+        listeners: 150,
+        weeklyStreams: 500,
+        catalog: [],
+        releasedSingles: [],
+        releasedAlbums: [],
+        videos: [],
+        skills: { songwriting: 1, vocal: 1, performance: 1, marketing: 1 },
+        popularity: { America: 2.0, UK: 1.0, Europe: 1.0, Asia: 0.5, Africa: 0.5 },
+        activeLabel: { id: 'indie', name: 'Independent (Indie)', royaltyShare: 1.0, albumsDue: 0, albumsCompleted: 0 },
+        artisfyAvatar: null,
+        artisfyBanner: null,
+        arttubeAvatar: null,
+        arttubeBanner: null,
+        subscribers: 50,
+        totalViews: 0
+      };
+
+      saves[activeSlotIndex] = gameState;
+      persistSavesToStorage();
+      enterGameScreen();
+    }
+
+    function loadGameSlot(idx) {
+      activeSlotIndex = idx;
+      gameState = JSON.parse(JSON.stringify(saves[idx]));
+      // Ensure data structures exist for older saves
+      if (!gameState.popularity) gameState.popularity = { America: 2.0, UK: 1.0, Europe: 1.0, Asia: 0.5, Africa: 0.5 };
+      if (!gameState.activeLabel) gameState.activeLabel = { id: 'indie', name: 'Independent (Indie)', royaltyShare: 1.0, albumsDue: 0, albumsCompleted: 0 };
+      if (!gameState.catalog) gameState.catalog = [];
+      if (!gameState.releasedSingles) gameState.releasedSingles = [];
+      if (!gameState.releasedAlbums) gameState.releasedAlbums = [];
+      if (!gameState.videos) gameState.videos = [];
+      if (!gameState.skills) gameState.skills = { songwriting: 1, vocal: 1, performance: 1, marketing: 1 };
+      
+      enterGameScreen();
+    }
+
+    function enterGameScreen() {
+      hideAllScreens();
+      document.getElementById('screen-game').classList.remove('hidden');
+      switchMainTab('home');
+      renderGameHUD();
+    }
+
+    function saveAndExitToMenu() {
+      persistSavesToStorage();
+      showSavesScreen();
+    }
+
+    /* ==========================================================================
+       MAIN GAME HUD & NAVIGATION
+       ========================================================================== */
+    function renderGameHUD() {
+      if (!gameState) return;
+      document.getElementById('hud-name').textContent = gameState.name;
+      document.getElementById('hud-week').textContent = `W${gameState.week}`;
+      document.getElementById('hud-genre-region').textContent = `${gameState.genre} • ${gameState.region}`;
+      document.getElementById('hud-energy').textContent = `${gameState.energy}/${gameState.maxEnergy}`;
+      document.getElementById('hud-money').textContent = formatNumber(gameState.money);
+
+      // Home View Data
+      document.getElementById('home-week-title').textContent = `Week ${gameState.week} Overview`;
+      document.getElementById('home-weekly-streams').textContent = formatNumber(gameState.weeklyStreams);
+      document.getElementById('home-monthly-listeners').textContent = formatNumber(gameState.listeners);
+      document.getElementById('home-catalog-count').textContent = `${gameState.catalog.length} Songs`;
+
+      const weeklyRev = Math.floor(gameState.weeklyStreams * 0.0035 * gameState.activeLabel.royaltyShare);
+      document.getElementById('home-weekly-income').textContent = `+$${formatNumber(weeklyRev)} / wk`;
+
+      // Label Widget
+      const labelW = document.getElementById('home-label-name');
+      const labelT = document.getElementById('home-label-terms');
+      if (gameState.activeLabel.id === 'indie') {
+        labelW.textContent = 'Independent (Indie)';
+        labelT.textContent = '100% royalties • No obligations';
+      } else {
+        labelW.textContent = gameState.activeLabel.name;
+        labelT.textContent = `Royalty: ${Math.round(gameState.activeLabel.royaltyShare * 100)}% • Albums Due: ${gameState.activeLabel.albumsCompleted}/${gameState.activeLabel.albumsDue}`;
+      }
+
+      renderContinentPopularity();
+      renderSkillsContainer();
+      renderFeatArtistSelect();
+      renderUnreleasedVault();
+      renderReleasedTracksSelect();
+      renderProjectChecklist();
+    }
+
+    function switchMainTab(tabName) {
+      ['home', 'studio', 'tours'].forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`nav-btn-${t}`);
+        if (t === tabName) {
+          el.classList.remove('hidden');
+          btn.className = 'flex flex-col items-center justify-center py-2 rounded-2xl bg-purple-600/20 border border-purple-500/40 text-purple-300 transition cursor-pointer';
+        } else {
+          el.classList.add('hidden');
+          btn.className = 'flex flex-col items-center justify-center py-2 rounded-2xl bg-zinc-900/70 border border-white/5 text-zinc-400 hover:text-white transition cursor-pointer';
+        }
+      });
+      renderGameHUD();
+    }
+
+    /* ==========================================================================
+       WEEKLY ADVANCE, EVENTS & ECONOMY
+       ========================================================================== */
+    function advanceWeek() {
+      if (!gameState) return;
+
+      // Calculate weekly streaming revenue based on popularity & active label
+      const avgPop = Object.values(gameState.popularity).reduce((a, b) => a + b, 0) / REGIONS.length;
+      const streamGrowth = Math.floor(gameState.catalog.length * 250 + avgPop * 400 + gameState.skills.marketing * 120);
+      gameState.weeklyStreams = Math.max(100, gameState.weeklyStreams + streamGrowth);
+      
+      const weeklyRev = Math.floor(gameState.weeklyStreams * 0.0035 * gameState.activeLabel.royaltyShare);
+      gameState.money += weeklyRev;
+      gameState.listeners = Math.floor(gameState.weeklyStreams * 1.8);
+      gameState.week += 1;
+      gameState.energy = gameState.maxEnergy; // Refill energy weekly
+
+      // Spontaneous PR or Scandal Event chance (25% per week)
+      if (Math.random() < 0.25 && gameState.week > 1) {
+        triggerRandomEvent();
+      }
+
+      persistSavesToStorage();
+      renderGameHUD();
+      showToast(`Advanced to Week ${gameState.week}. Earned +$${formatNumber(weeklyRev)}!`, 'success');
+    }
+
+    function triggerRandomEvent() {
+      const events = [
+        {
+          title: 'Viral TikTok Challenge!',
+          desc: 'A snippet of your track went viral on TikTok, boosting streaming numbers overnight.',
+          badge: 'VIRAL HIT',
+          actionText: 'Ride the Wave (+15,000 Streams)',
+          effect: () => { gameState.weeklyStreams += 15000; gameState.money += 300; }
+        },
+        {
+          title: 'Online Drama with Rival Artist',
+          desc: 'A prominent critic slammed your musical style online. How do you respond?',
+          badge: 'PR DRAMA',
+          actionText: 'Fire Back on Twitter (+Popularity, -Energy)',
+          effect: () => { gameState.popularity[gameState.region] += 1.5; gameState.energy = Math.max(0, gameState.energy - 20); }
+        },
+        {
+          title: 'Brand Sponsorship Offer',
+          desc: 'An energy drink brand wants to sponsor your social media pages for a quick cash injection.',
+          badge: 'SPONSORSHIP',
+          actionText: 'Accept Sponsorship (+$1,200)',
+          effect: () => { gameState.money += 1200; }
+        },
+        {
+          title: 'Late Night Studio Inspiration',
+          desc: 'You stayed up all night experimenting with a new melody. Your songwriting skill improved.',
+          badge: 'BREAKTHROUGH',
+          actionText: 'Awesome (+1 Songwriting Skill)',
+          effect: () => { gameState.skills.songwriter += 1; }
+        }
+      ];
+
+      const ev = events[Math.floor(Math.random() * events.length)];
+      document.getElementById('event-badge').textContent = ev.badge;
+      document.getElementById('event-title').textContent = ev.title;
+      document.getElementById('event-desc').textContent = ev.desc;
+
+      const btnContainer = document.getElementById('event-buttons');
+      btnContainer.innerHTML = `
+        <button onclick="resolveEvent(${JSON.stringify(ev.effect.toString())})" class="w-full py-3.5 rounded-2xl font-extrabold text-sm bg-purple-600 hover:bg-purple-500 text-white transition cursor-pointer">
+          ${ev.actionText}
+        </button>
+        <button onclick="closeModal('modal-event')" class="w-full py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer">
+          Dismiss
+        </button>
+      `;
+
+      // Store active effect temporarily
+      window._activeEventEffect = ev.effect;
+      document.getElementById('modal-event').classList.remove('hidden');
+    }
+
+    function resolveEvent(effectStr) {
+      if (window._activeEventEffect) {
+        window._activeEventEffect();
+      }
+      closeModal('modal-event');
+      renderGameHUD();
+      showToast('Event resolved!', 'info');
+    }
+
+    /* ==========================================================================
+       CONTINENT POPULARITY & SKILLS
+       ========================================================================== */
+    function renderContinentPopularity() {
+      const container = document.getElementById('continent-popularity-list');
+      container.innerHTML = '';
+      let totalPop = 0;
+
+      REGIONS.forEach(reg => {
+        const pop = gameState.popularity[reg] || 1.0;
+        totalPop += pop;
+        const pct = Math.min(100, (pop / 25) * 100);
+        container.innerHTML += `
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-bold text-white">${reg}</span>
+              <span class="font-extrabold text-purple-400">${pop.toFixed(1)}%</span>
+            </div>
+            <div class="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/5">
+              <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      const avg = totalPop / REGIONS.length;
+      document.getElementById('home-avg-popularity').textContent = `Avg ${avg.toFixed(1)}%`;
+    }
+
+    function renderSkillsContainer() {
+      const container = document.getElementById('skills-container');
+      const skillsDef = [
+        { key: 'songwriting', name: 'Songwriting', desc: 'Improves base track quality' },
+        { key: 'vocal', name: 'Vocal Performance', desc: 'Boosts replay value & streams' },
+        { key: 'performance', name: 'Stage Presence', desc: 'Increases tour ticket sell-through' },
+        { key: 'marketing', name: 'Marketing & PR', desc: 'Boosts organic listener acquisition' }
+      ];
+
+      container.innerHTML = '';
+      skillsDef.forEach(s => {
+        const lvl = gameState.skills[s.key] || 1;
+        container.innerHTML += `
+          <div class="flex items-center justify-between bg-black/40 p-3 rounded-2xl border border-white/5">
+            <div>
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs font-bold text-white">${s.name}</h5>
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300">Lvl ${lvl}</span>
+              </div>
+              <p class="text-[10px] text-zinc-400 mt-0.5">${s.desc}</p>
+            </div>
+            <button onclick="trainSkill('${s.key}')" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white border border-white/10 transition cursor-pointer">
+              Train (⚡25)
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function trainSkill(key) {
+      if (gameState.energy < 25) {
+        showToast('Not enough energy! Advance week to recharge.', 'error');
+        return;
+      }
+      gameState.energy -= 25;
+      gameState.skills[key] = (gameState.skills[key] || 1) + 1;
+      persistSavesToStorage();
+      renderGameHUD();
+      showToast(`Trained ${key}! Level increased.`, 'success');
+    }
+
+    /* ==========================================================================
+       STUDIO & FEAT SYSTEM
+       ========================================================================== */
+    function switchStudioMode(mode) {
+      currentStudioMode = mode;
+      ['record', 'single', 'project'].forEach(m => {
+        const view = document.getElementById(`studio-view-${m}`);
+        const btn = document.getElementById(`studio-btn-${m}`);
+        if (m === mode) {
+          view.classList.remove('hidden');
+          btn.className = m === 'record' ? 'py-2.5 rounded-xl text-xs font-extrabold bg-purple-600 text-white transition cursor-pointer' :
+                          m === 'single' ? 'py-2.5 rounded-xl text-xs font-extrabold bg-[#1DB954] text-black transition cursor-pointer' :
+                                           'py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 text-black transition cursor-pointer';
+        } else {
+          view.classList.add('hidden');
+          btn.className = 'py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition cursor-pointer';
+        }
+      });
+      renderGameHUD();
+    }
+
+    function renderFeatArtistSelect() {
+      const select = document.getElementById('track-feat-select');
+      select.innerHTML = '<option value="">-- Solo Track (No Feature) --</option>';
+      
+      const artists = CONTINENT_FEATURE_ARTISTS[gameState.region] || [];
+      artists.forEach(art => {
+        select.innerHTML += `<option value="${art.id}">${art.name} (Fame: ${formatNumber(art.fame)})</option>`;
+      });
+    }
+
+    function recordNewTrack() {
+      const titleInput = document.getElementById('track-title-input');
+      const title = titleInput.value.trim() || `Track #${gameState.catalog.length + 1}`;
+      const featId = document.getElementById('track-feat-select').value;
+
+      const energyCost = 20;
+      let cashCost = 100;
+      let featObj = null;
+
+      if (featId) {
+        cashCost += 150;
+      }
+
+      if (gameState.energy < energyCost) {
+        showToast('Not enough energy to record!', 'error');
+        return;
+      }
+      if (gameState.money < cashCost) {
+        showToast(`Need $${cashCost} for studio session & engineer!`, 'error');
+        return;
+      }
+
+      gameState.energy -= energyCost;
+      gameState.money -= cashCost;
+
+      if (featId) {
+        const artists = CONTINENT_FEATURE_ARTISTS[gameState.region] || [];
+        featObj = artists.find(a => a.id === featId) || null;
+      }
+
+      // Calculate track quality
+      let baseQuality = Math.floor(50 + gameState.skills.songwriter * 8 + gameState.skills.vocal * 6 + Math.random() * 20);
+      if (featObj) {
+        baseQuality = Math.min(99, baseQuality + Math.floor(featObj.quality * 0.35));
+      }
+
+      const newTrack = {
+        id: 'track_' + Date.now(),
+        title: title,
+        quality: Math.min(100, baseQuality),
+        genre: gameState.genre,
+        feat: featObj ? featObj.name : null,
+        streams: 0,
+        released: false
+      };
+
+      gameState.catalog.push(newTrack);
+      titleInput.value = '';
+      persistSavesToStorage();
+      renderGameHUD();
+      showToast(`Recorded "${title}"! Quality: ${newTrack.quality}/100`, 'success');
+    }
+
+    function renderUnreleasedVault() {
+      const container = document.getElementById('unreleased-tracks-list');
+      const unreleased = gameState.catalog.filter(t => !t.released);
+      document.getElementById('unreleased-count-badge').textContent = `${unreleased.length} Tracks`;
+
+      if (unreleased.length === 0) {
+        container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-4">No unreleased tracks in vault. Record one above!</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      unreleased.forEach(t => {
+        container.innerHTML += `
+          <div class="bg-black/40 p-3 rounded-2xl border border-white/5 flex items-center justify-between text-xs">
+            <div>
+              <p class="font-extrabold text-white">${escapeHtml(t.title)} ${t.feat ? `<span class="text-purple-400 font-normal">ft. ${escapeHtml(t.feat)}</span>` : ''}</p>
+              <p class="text-[10px] text-zinc-400 mt-0.5">Quality: <strong class="text-emerald-400">${t.quality}/100</strong> • Genre: ${t.genre}</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 font-bold text-[10px]">Vault</span>
+          </div>
+        `;
+      });
+    }
+
+    function renderReleasedTracksSelect() {
+      const select = document.getElementById('single-track-select');
+      select.innerHTML = '';
+      const unreleased = gameState.catalog.filter(t => !t.released);
+
+      if (unreleased.length === 0) {
+        select.innerHTML = '<option value="">-- Record a track first --</option>';
+        return;
+      }
+
+      unreleased.forEach(t => {
+        select.innerHTML += `<option value="${t.id}">${escapeHtml(t.title)} (Quality: ${t.quality})</option>`;
+      });
+    }
+
+    function releaseSingle() {
+      const trackId = document.getElementById('single-track-select').value;
+      if (!trackId) {
+        showToast('Select an unreleased track!', 'error');
+        return;
+      }
+      if (gameState.money < 150) {
+        showToast('Need $150 for worldwide single distribution.', 'error');
+        return;
+      }
+
+      gameState.money -= 150;
+      const track = gameState.catalog.find(t => t.id === trackId);
+      if (track) {
+        track.released = true;
+        track.type = 'Single';
+        track.cover = tempCovers.single.value;
+        track.sales = Math.floor(track.quality * 120 + Math.random() * 500);
+        gameState.releasedSingles.push(track);
+        gameState.weeklyStreams += Math.floor(track.quality * 150);
+        gameState.popularity[gameState.region] = Math.min(100, gameState.popularity[gameState.region] + 0.8);
+      }
+
+      persistSavesToStorage();
+      renderGameHUD();
+      switchStudioMode('record');
+      showToast('Single successfully released worldwide!', 'success');
+    }
+
+    // EP / Album logic
+    function setProjectType(type) {
+      currentProjectType = type;
+      const btnEp = document.getElementById('proj-type-ep');
+      const btnAlbum = document.getElementById('proj-type-album');
+      if (type === 'EP') {
+        btnEp.className = 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 text-black transition cursor-pointer';
+        btnAlbum.className = 'py-2.5 rounded-xl text-xs font-bold text-zinc-900 text-zinc-400 border border-white/5 transition cursor-pointer';
+      } else {
+        btnEp.className = 'py-2.5 rounded-xl text-xs font-bold text-zinc-900 text-zinc-400 border border-white/5 transition cursor-pointer';
+        btnAlbum.className = 'py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 text-black transition cursor-pointer';
+      }
+      renderProjectChecklist();
+    }
+
+    function renderProjectChecklist() {
+      const container = document.getElementById('project-tracks-checklist');
+      const unreleased = gameState.catalog.filter(t => !t.released);
+
+      if (unreleased.length === 0) {
+        container.innerHTML = '<p class="text-xs text-zinc-500 py-3 text-center">No unreleased tracks in vault.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      unreleased.forEach(t => {
+        const isSelected = selectedTrackIdsForProject.includes(t.id);
+        container.innerHTML += `
+          <div onclick="toggleProjectTrackSelection('${t.id}')" class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer ${isSelected ? 'bg-amber-500/15 border-amber-500/40' : 'bg-black/40 border-white/5'}">
+            <div>
+              <p class="text-xs font-bold text-white">${escapeHtml(t.title)}</p>
+              <p class="text-[10px] text-zinc-400">Quality: ${t.quality}</p>
+            </div>
+            <span class="w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-amber-500 border-amber-500 text-black' : 'border-white/20 text-transparent'}">✓</span>
+          </div>
+        `;
+      });
+
+      document.getElementById('project-selected-count').textContent = `${selectedTrackIdsForProject.length} selected`;
+    }
+
+    function toggleProjectTrackSelection(id) {
+      if (selectedTrackIdsForProject.includes(id)) {
+        selectedTrackIdsForProject = selectedTrackIdsForProject.filter(x => x !== id);
+      } else {
+        const limit = currentProjectType === 'EP' ? 5 : 12;
+        if (selectedTrackIdsForProject.length >= limit) {
+          showToast(`${currentProjectType} max tracks limit reached (${limit}).`, 'error');
+          return;
+        }
+        selectedTrackIdsForProject.push(id);
+      }
+      renderProjectChecklist();
+    }
+
+    function releaseProject() {
+      const minReq = currentProjectType === 'EP' ? 3 : 6;
+      if (selectedTrackIdsForProject.length < minReq) {
+        showToast(`${currentProjectType} requires at least ${minReq} tracks selected!`, 'error');
+        return;
+      }
+      if (gameState.money < 400) {
+        showToast('Need $400 for project distribution.', 'error');
+        return;
+      }
+
+      gameState.money -= 400;
+      const titleInput = document.getElementById('project-title-input');
+      const title = titleInput.value.trim() || `${currentProjectType} #${gameState.releasedAlbums.length + 1}`;
+
+      const tracks = gameState.catalog.filter(t => selectedTrackIdsForProject.includes(t.id));
+      tracks.forEach(t => t.released = true);
+
+      const avgQ = tracks.reduce((sum, t) => sum + t.quality, 0) / tracks.length;
+      const newAlbum = {
+        id: 'proj_' + Date.now(),
+        title: title,
+        type: currentProjectType,
+        tracks: tracks,
+        cover: tempCovers.project.value,
+        quality: Math.round(avgQ),
+        sales: Math.floor(avgQ * 350 * tracks.length)
+      };
+
+      gameState.releasedAlbums.push(newAlbum);
+      gameState.weeklyStreams += Math.floor(avgQ * 300 * tracks.length);
+      gameState.popularity[gameState.region] = Math.min(100, gameState.popularity[gameState.region] + 2.5);
+
+      // Update Label obligations if signed
+      if (gameState.activeLabel.id !== 'indie') {
+        gameState.activeLabel.albumsCompleted += 1;
+        if (gameState.activeLabel.albumsCompleted >= gameState.activeLabel.albumsDue) {
+          showToast('Record label contract obligations fulfilled! Check offers for renewal.', 'success');
+        }
+      }
+
+      selectedTrackIdsForProject = [];
+      titleInput.value = '';
+      persistSavesToStorage();
+      renderGameHUD();
+      switchStudioMode('record');
+      showToast(`${currentProjectType} "${title}" successfully released!`, 'success');
+    }
+
+    /* ==========================================================================
+       RECORD LABELS SYSTEM
+       ========================================================================== */
+    function openLabelModal() {
+      const container = document.getElementById('labels-offers-container');
+      container.innerHTML = '';
+
+      RECORD_LABELS.forEach(lbl => {
+        const isCurrent = gameState.activeLabel.id === lbl.id;
+        container.innerHTML += `
+          <div class="bg-black/50 p-4 rounded-2xl border ${isCurrent ? 'border-amber-400/50' : 'border-white/10'} space-y-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-extrabold text-white">${lbl.name}</h4>
+              ${isCurrent ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">Active</span>' : ''}
+            </div>
+            <p class="text-xs text-zinc-300">${lbl.desc}</p>
+            <div class="flex items-center justify-between pt-2">
+              <span class="text-xs font-bold text-emerald-400">Advance: $${formatNumber(lbl.advance)}</span>
+              ${!isCurrent ? `<button onclick="signRecordLabel('${lbl.id}')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition cursor-pointer">Sign Deal</button>` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('modal-labels').classList.remove('hidden');
+    }
+
+    function signRecordLabel(lblId) {
+      const lbl = RECORD_LABELS.find(l => l.id === lblId);
+      if (!lbl) return;
+
+      gameState.activeLabel = {
+        id: lbl.id,
+        name: lbl.name,
+        royaltyShare: lbl.royaltyShare,
+        albumsDue: lbl.albumRequirement,
+        albumsCompleted: 0
+      };
+
+      if (lbl.advance > 0) {
+        gameState.money += lbl.advance;
+      }
+
+      persistSavesToStorage();
+      renderGameHUD();
+      closeModal('modal-labels');
+      showToast(`Signed recording contract with ${lbl.name}!`, 'success');
+    }
+
+    /* ==========================================================================
+       TOURS & CONCERTS SYSTEM
+       ========================================================================== */
+    function renderTourContinentSelector() {
+      const container = document.getElementById('tour-continent-selector');
+      container.innerHTML = '';
+      REGIONS.forEach(reg => {
+        const isSel = reg === selectedTourContinent;
+        container.innerHTML += `
+          <button type="button" onclick="selectTourContinent('${reg}')"
+            class="py-2.5 px-2 rounded-xl text-xs font-extrabold border transition ${isSel ? 'bg-pink-600 text-white border-pink-500 shadow-md' : 'bg-zinc-900/60 text-zinc-400 border-white/5 hover:text-white'}">
+            ${reg}
+          </button>
+        `;
+      });
+      renderTourVenuesList();
+    }
+
+    function selectTourContinent(reg) {
+      selectedTourContinent = reg;
+      renderTourContinentSelector();
+    }
+
+    function selectTourTier(tier) {
+      selectedTourTier = tier;
+      ['clubs', 'arenas', 'festivals'].forEach(t => {
+        const btn = document.getElementById(`tour-tier-btn-${t}`);
+        if (t === tier) {
+          btn.className = 'py-2.5 px-1.5 rounded-xl text-[11px] font-extrabold bg-pink-600 text-white transition cursor-pointer';
+        } else {
+          btn.className = 'py-2.5 px-1.5 rounded-xl text-[11px] font-bold text-zinc-400 hover:text-white transition cursor-pointer';
+        }
+      });
+      renderTourVenuesList();
+    }
+
+    function renderTourVenuesList() {
+      const container = document.getElementById('tours-list-container');
+      const venues = TOUR_VENUES_BY_CONTINENT[selectedTourContinent][selectedTourTier] || [];
+      const pop = gameState.popularity[selectedTourContinent] || 1.0;
+
+      document.getElementById('tour-selected-pop-badge').textContent = `Popularity: ${pop.toFixed(1)}%`;
+      container.innerHTML = '';
+
+      venues.forEach(v => {
+        container.innerHTML += `
+          <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h5 class="text-sm font-extrabold text-white">${escapeHtml(v.city)} — ${escapeHtml(v.venue)}</h5>
+              </div>
+              <p class="text-xs text-zinc-400 mt-0.5">Capacity: ${formatNumber(v.capacity)} • Ticket: $${v.ticketPrice}</p>
+              <p class="text-[11px] text-amber-300 mt-1">Booking Cost: $${formatNumber(v.cost)}</p>
+            </div>
+            <button onclick="bookTourShow('${selectedTourContinent}', '${selectedTourTier}', '${v.id}')"
+              class="px-4 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-extrabold shadow-lg shadow-pink-600/25 active:scale-95 transition cursor-pointer shrink-0">
+              Book Show
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function bookTourShow(continent, tier, venueId) {
+      const venue = TOUR_VENUES_BY_CONTINENT[continent][tier].find(v => v.id === venueId);
+      if (!venue) return;
+
+      const energyCost = 15;
+      if (gameState.energy < energyCost) {
+        showToast('Not enough energy to perform a concert!', 'error');
+        return;
+      }
+      if (gameState.money < venue.cost) {
+        showToast(`Need $${formatNumber(venue.cost)} to book venue and production!`, 'error');
+        return;
+      }
+
+      gameState.energy -= energyCost;
+      gameState.money -= venue.cost;
+
+      // Sell tickets based on popularity and performance skill
+      const pop = gameState.popularity[continent] || 1.0;
+      const perfBonus = gameState.skills.performance * 0.05;
+      const sellRate = Math.min(1.0, (pop / 25) * 0.7 + perfBonus + Math.random() * 0.2);
+      const ticketsSold = Math.floor(venue.capacity * sellRate);
+      const grossRev = ticketsSold * venue.ticketPrice;
+      const netProfit = grossRev - venue.cost;
+
+      gameState.money += grossRev;
+      const popGain = Number((sellRate * 1.5).toFixed(1));
+      gameState.popularity[continent] = Math.min(100, gameState.popularity[continent] + popGain);
+      gameState.weeklyStreams += ticketsSold * 15;
+
+      // Show Tour Result Modal
+      document.getElementById('tour-result-title').textContent = `${venue.city} — ${venue.venue}`;
+      document.getElementById('tour-result-subtitle').textContent = `${continent} • ${tier.toUpperCase()}`;
+      document.getElementById('tour-res-tickets').textContent = `${formatNumber(ticketsSold)} / ${formatNumber(venue.capacity)} (${Math.round(sellRate * 100)}%)`;
+      document.getElementById('tour-res-price').textContent = `$${venue.ticketPrice}`;
+      document.getElementById('tour-res-gross').textContent = `+$${formatNumber(grossRev)}`;
+      document.getElementById('tour-res-cost').textContent = `-$${formatNumber(venue.cost)}`;
+      document.getElementById('tour-res-pop-gain').textContent = `+${popGain}%`;
+      document.getElementById('tour-res-net').textContent = `${netProfit >= 0 ? '+' : ''}$${formatNumber(netProfit)}`;
+
+      document.getElementById('modal-tour-result').classList.remove('hidden');
+
+      persistSavesToStorage();
+      renderGameHUD();
+      renderTourVenuesList();
+    }
+
+    /* ==========================================================================
+       SUB-APPS & MEDIA (ARTISFY, ALBUMVIEW, ARTTUBE, CHARTS)
+       ========================================================================== */
+    function openSubApp(appName) {
+      if (appName === 'artisfy') {
+        document.getElementById('artisfy-artist-name').textContent = gameState.name;
+        document.getElementById('artisfy-monthly-listeners').textContent = `${formatNumber(gameState.listeners)} monthly listeners`;
+        
+        // Render Avatar & Banner
+        const avImg = document.getElementById('artisfy-avatar-img');
+        if (gameState.artisfyAvatar) {
+          avImg.src = gameState.artisfyAvatar;
+          avImg.classList.remove('hidden');
+        } else {
+          avImg.classList.add('hidden');
+        }
+
+        const banImg = document.getElementById('artisfy-banner-img');
+        if (gameState.artisfyBanner) {
+          banImg.src = gameState.artisfyBanner;
+          banImg.classList.remove('hidden');
+        } else {
+          banImg.classList.add('hidden');
+        }
+
+        // Popular songs
+        const list = document.getElementById('artisfy-popular-list');
+        list.innerHTML = '';
+        const released = gameState.catalog.filter(t => t.released);
+        if (released.length === 0) {
+          list.innerHTML = '<p class="text-xs text-zinc-500 py-4">No released tracks yet.</p>';
+        } else {
+          released.forEach((t, idx) => {
+            list.innerHTML += `
+              <div class="flex items-center justify-between py-2 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                  <span class="text-xs font-bold text-zinc-500">${idx + 1}</span>
+                  <div>
+                    <p class="text-xs font-bold text-white">${escapeHtml(t.title)}</p>
+                    <p class="text-[10px] text-zinc-400">${formatNumber(Math.floor(t.quality * 450))} streams</p>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-emerald-400">▶</span>
+              </div>
+            `;
+          });
+        }
+        document.getElementById('subapp-artisfy').classList.remove('hidden');
+      }
+      else if (appName === 'albumview') {
+        const totalSales = gameState.releasedSingles.reduce((s, x) => s + x.sales, 0) +
+                           gameState.releasedAlbums.reduce((s, x) => s + x.sales, 0);
+        document.getElementById('albumview-total-sales').textContent = `${formatNumber(totalSales)} Copies`;
+
+        const grid = document.getElementById('albumview-grid');
+        grid.innerHTML = '';
+
+        const allProjects = [...gameState.releasedSingles, ...gameState.releasedAlbums];
+        if (allProjects.length === 0) {
+          grid.innerHTML = '<p class="text-xs text-zinc-500 col-span-2 text-center py-6">No released albums or singles.</p>';
+        } else {
+          allProjects.forEach(p => {
+            grid.innerHTML += `
+              <div class="glass-card rounded-2xl p-3 flex flex-col gap-2">
+                <div class="w-full h-32 rounded-xl overflow-hidden shadow-md flex items-center justify-center text-white text-xs font-black" style="background: ${p.cover || COVER_PRESETS[0]}">
+                  ${p.title.charAt(0)}
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-white truncate">${escapeHtml(p.title)}</h5>
+                  <p class="text-[10px] text-amber-400 mt-0.5">${formatNumber(p.sales)} Sold</p>
+                </div>
+              </div>
+            `;
+          });
+        }
+        document.getElementById('subapp-albumview').classList.remove('hidden');
+      }
+      else if (appName === 'arttube') {
+        document.getElementById('arttube-channel-name').textContent = gameState.name + ' Official';
+        document.getElementById('arttube-subs').textContent = `${formatNumber(gameState.subscribers)} subscribers`;
+        document.getElementById('arttube-total-views').textContent = `${formatNumber(gameState.totalViews)} views`;
+
+        const avImg = document.getElementById('arttube-avatar-img');
+        if (gameState.arttubeAvatar) {
+          avImg.src = gameState.arttubeAvatar;
+          avImg.classList.remove('hidden');
+        } else {
+          avImg.classList.add('hidden');
+        }
+
+        const banImg = document.getElementById('arttube-banner-img');
+        if (gameState.arttubeBanner) {
+          banImg.src = gameState.arttubeBanner;
+          banImg.classList.remove('hidden');
+        } else {
+          banImg.classList.add('hidden');
+        }
+
+        renderArtTubeVideosList();
+        document.getElementById('subapp-arttube').classList.remove('hidden');
+      }
+      else if (appName === 'charts') {
+        renderChartsContinentTabs();
+        renderContinentSinglesChart();
+        document.getElementById('subapp-charts').classList.remove('hidden');
+      }
+    }
+
+    function closeSubApp(appName) {
+      document.getElementById(`subapp-${appName}`).classList.add('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function updateProfileMedia(event, targetKey) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (targetKey === 'artisfyAvatar') gameState.artisfyAvatar = e.target.result;
+        if (targetKey === 'artisfyBanner') gameState.artisfyBanner = e.target.result;
+        if (targetKey === 'arttubeAvatar') gameState.arttubeAvatar = e.target.result;
+        if (targetKey === 'arttubeBanner') gameState.arttubeBanner = e.target.result;
+        persistSavesToStorage();
+        openSubApp(targetKey.includes('artisfy') ? 'artisfy' : 'arttube');
+        showToast('Profile image updated successfully!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* ==========================================================================
+       ARTTUBE VIDEO SYSTEM
+       ========================================================================== */
+    function openArtTubeUploadModal() {
+      const select = document.getElementById('arttube-song-select');
+      select.innerHTML = '';
+      const released = gameState.catalog.filter(t => t.released);
+
+      if (released.length === 0) {
+        select.innerHTML = '<option value="">-- Release a song first --</option>';
+      } else {
+        released.forEach(t => {
+          select.innerHTML += `<option value="${t.id}">${escapeHtml(t.title)}</option>`;
+        });
+      }
+
+      document.getElementById('modal-arttube-upload').classList.remove('hidden');
+    }
+
+    function cyclePresetCover(type) {
+      const randomGrad = COVER_PRESETS[Math.floor(Math.random() * COVER_PRESETS.length)];
+      tempCovers[type].value = randomGrad;
+
+      if (type === 'single') {
+        document.getElementById('single-cover-preview').style.background = randomGrad;
+      } else if (type === 'project') {
+        document.getElementById('project-cover-preview').style.background = randomGrad;
+      } else if (type === 'arttube') {
+        document.getElementById('arttube-thumb-preview').style.background = randomGrad;
+      }
+    }
+
+    function publishArtTubeVideo() {
+      const songId = document.getElementById('arttube-song-select').value;
+      if (!songId) {
+        showToast('Select a released song for the video!', 'error');
+        return;
+      }
+
+      const song = gameState.catalog.find(t => t.id === songId);
+      const views = Math.floor(song.quality * 1800 + Math.random() * 5000);
+      const subsGained = Math.floor(views * 0.08);
+
+      const newVideo = {
+        id: 'vid_' + Date.now(),
+        title: `${song.title} (Official Music Video)`,
+        songTitle: song.title,
+        views: views,
+        thumbnail: tempCovers.arttube.value
+      };
+
+      gameState.videos.push(newVideo);
+      gameState.subscribers += subsGained;
+      gameState.totalViews += views;
+      gameState.money += Math.floor(views * 0.001); // YouTube ad revenue
+
+      persistSavesToStorage();
+      closeModal('modal-arttube-upload');
+      openSubApp('arttube');
+      showToast(`Music video published! Gained +${formatNumber(subsGained)} subscribers.`, 'success');
+    }
+
+    function renderArtTubeVideosList() {
+      const container = document.getElementById('arttube-videos-list');
+      container.innerHTML = '';
+
+      if (gameState.videos.length === 0) {
+        container.innerHTML = '<p class="text-xs text-zinc-500 text-center py-6">No music videos posted yet.</p>';
+        return;
+      }
+
+      gameState.videos.forEach(v => {
+        container.innerHTML += `
+          <div class="glass-card rounded-2xl overflow-hidden">
+            <div class="w-full h-36 flex items-center justify-center text-white font-bold text-xs" style="background: ${v.thumbnail}">
+              ▶ ${escapeHtml(v.songTitle)}
+            </div>
+            <div class="p-3">
+              <h5 class="text-xs font-extrabold text-white truncate">${escapeHtml(v.title)}</h5>
+              <p class="text-[10px] text-zinc-400 mt-0.5">${formatNumber(v.views)} views</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    /* ==========================================================================
+       GLOBAL CHARTS (CONTINENT-BASED)
+       ========================================================================== */
+    function renderChartsContinentTabs() {
+      const container = document.getElementById('charts-continent-tabs');
+      container.innerHTML = '';
+      REGIONS.forEach(reg => {
+        const isSel = reg === selectedChartsContinent;
+        container.innerHTML += `
+          <button type="button" onclick="selectChartsContinent('${reg}')"
+            class="px-3 py-1.5 rounded-xl text-xs font-extrabold border shrink-0 transition ${isSel ? 'bg-purple-600 text-white border-purple-500' : 'bg-zinc-900 text-zinc-400 border-white/5'}">
+            ${reg}
+          </button>
+        `;
+      });
+    }
+
+    function selectChartsContinent(reg) {
+      selectedChartsContinent = reg;
+      renderChartsContinentTabs();
+      renderContinentSinglesChart();
+    }
+
+    function renderContinentSinglesChart() {
+      document.getElementById('charts-header-title').textContent = `${selectedChartsContinent} Top 10 Singles`;
+      const container = document.getElementById('continent-singles-chart-list');
+      container.innerHTML = '';
+
+      // Generate dynamic chart items mixing NPC artists and the player
+      const npcs = CONTINENT_FEATURE_ARTISTS[selectedChartsContinent] || [];
+      const chartEntries = [];
+
+      npcs.forEach((art, i) => {
+        chartEntries.push({
+          rank: i + 1,
+          title: `Hit Single #${i + 1}`,
+          artist: art.name,
+          score: art.fame
+        });
+      });
+
+      // Insert player if they have popularity in this continent
+      const pop = gameState.popularity[selectedChartsContinent] || 1.0;
+      const playerRank = Math.max(1, Math.min(10, Math.floor(11 - (pop / 10))));
+      const playerReleased = gameState.catalog.filter(t => t.released);
+      const topSongTitle = playerReleased.length > 0 ? playerReleased[playerReleased.length - 1].title : gameState.name + ' Anthem';
+
+      const playerEntry = {
+        rank: playerRank,
+        title: topSongTitle,
+        artist: gameState.name + ' (You)',
+        score: Math.floor(pop * 1000000),
+        isPlayer: true
+      };
+
+      // Splice player into chart
+      chartEntries.splice(playerRank - 1, 0, playerEntry);
+
+      // Render top 10
+      chartEntries.slice(0, 10).forEach((entry, idx) => {
+        const isYou = entry.isPlayer;
+        container.innerHTML += `
+          <div class="flex items-center justify-between p-3 rounded-2xl border ${isYou ? 'bg-purple-600/20 border-purple-500/40' : 'bg-black/40 border-white/5'}">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-black ${idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-zinc-300' : idx === 2 ? 'text-amber-600' : 'text-zinc-500'}">#${idx + 1}</span>
+              <div>
+                <p class="text-xs font-extrabold ${isYou ? 'text-purple-300' : 'text-white'}">${escapeHtml(entry.title)}</p>
+                <p class="text-[10px] text-zinc-400">${escapeHtml(entry.artist)}</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-emerald-400">Chart Hit</span>
+          </div>
+        `;
+      });
+    }
+
+    /* ==========================================================================
+       UTILITIES
+       ========================================================================== */
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toLocaleString();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-3 rounded-2xl text-xs font-bold shadow-xl border backdrop-blur-md animate-fade-in pointer-events-auto flex items-center gap-2 ${
+        type === 'success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-300' :
+        type === 'error' ? 'bg-rose-950/90 border-rose-500/40 text-rose-300' :
+                           'bg-zinc-900/90 border-white/10 text-white'
+      }`;
+      toast.innerHTML = `<span>${type === 'success' ? '✨' : type === 'error' ? '⚠️' : 'ℹ️'}</span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
